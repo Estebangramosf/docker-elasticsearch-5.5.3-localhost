@@ -1,45 +1,38 @@
-version: '2'
+version: '3.6'
 services:
-  elasticsearch1:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.5.3
-    container_name: elasticsearch1
+  elasticsearch:
+    #image: docker.elastic.co/elasticsearch/elasticsearch:5.5.3
+    build:
+      context: .
+      dockerfile: dockerfiles/Elasticsearch.Dockerfile
+    container_name: elasticsearch
     environment:
+      - node.name=winner
       - cluster.name=docker-cluster
+      #- bootstrap.memory_lock=true
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - network.host=0.0.0.0
+      - discovery.zen.minimum_master_nodes=1
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
     ulimits:
       memlock:
         soft: -1
         hard: -1
-    mem_limit: 1g
+    deploy:
+      resources:
+        limits: 
+          memory: 1g
     volumes:
-      - esdata1:/usr/share/elasticsearch/data
+      - esdata:/usr/share/elasticsearch/data
     ports:
       - 9200:9200
     networks:
-      - esnet
-  elasticsearch2:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.5.3
-    environment:
-      - cluster.name=docker-cluster
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - "discovery.zen.ping.unicast.hosts=elasticsearch1"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    mem_limit: 1g
-    volumes:
-      - esdata2:/usr/share/elasticsearch/data
-    networks:
-      - esnet
+      - elasticsearch_553_net
 
 volumes:
-  esdata1:
-    driver: local
-  esdata2:
-    driver: local
+  esdata:
 
 networks:
-  esnet:
+  elasticsearch_553_net:
+    external: true
+
